@@ -5,6 +5,10 @@
  */
 package leaderelection;
 
+import java.net.DatagramPacket;
+import java.net.InetAddress;
+import java.net.MulticastSocket;
+
 /**
  *
  * @author alunos
@@ -14,14 +18,47 @@ package leaderelection;
 
 public class LeaderElection {
 
-    /**
-     * @param args the command line arguments
-     */
-    public static void main(String[] args) {
-      
-       
+    public static void main(String[] args) throws Exception {
+    
+        //start connection
+        // - new UDPclient
         
-        // TODO code application logic here
+        //init nodes values for leader election
+        
+        // new node
+        
+        //start leader election...
+        
+        // new statemachine (or node method, just do node.state_machine();)
+ 
+        
+        /*
+        int mcPort = 12345;
+        String mcIPStr = "230.1.1.1";
+        MulticastSocket mcSocket = null;
+        InetAddress mcIPAddress = null;
+        mcIPAddress = InetAddress.getByName(mcIPStr);
+        mcSocket = new MulticastSocket(mcPort);
+        System.out.println("Multicast Receiver running at:"
+            + mcSocket.getLocalSocketAddress());
+        mcSocket.joinGroup(mcIPAddress);
+
+        DatagramPacket packet = new DatagramPacket(new byte[1024], 1024);
+
+        System.out.println("Waiting for a  multicast message...");
+        while(true){
+            mcSocket.receive(packet);
+        String msg = new String(packet.getData(), packet.getOffset(),
+            packet.getLength());
+        System.out.println("[Multicast  Receiver] Received:" + msg);
+        if(msg.equals("end"))break;
     }
+
+
+    mcSocket.leaveGroup(mcIPAddress);
+    mcSocket.close();
+    */
+    }
+
     
 }
