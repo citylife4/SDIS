@@ -17,28 +17,27 @@ import java.util.logging.Logger;
  *
  * @author alunos
  */
+
+
+
 public class Node {
     private final int id;
     private final int value;
     private boolean delta;
     private Node parent;
-    boolean ackSent;
-    int lidid;
+    private boolean ackSent;
+    private int lidid;
+    private boolean initiator; //define se este é o node que vai iniciar a comunicação
+    
+    //UDPclient client; = new UDPclient();
     
     ArrayList<Node> N;
     ArrayList<Node> S;
     ArrayList<Node> ackValues;
-    
-    static boolean input;
+  
     static int state = 1;
-    
-    InetAddress group;
-    String inetAddress = "228.5.6.7";
-    int port = 6789;
-    
-
-    
-    public Node(int id, int value){
+     
+    public Node(int id, int value, boolean initiator){
         this.id = id;
         this.value = value;
         this.delta = false;
@@ -46,41 +45,16 @@ public class Node {
         this.ackSent = false;
         this.N = null;
         this.S = null;
+        this.initiator = initiator;
         
         this.stateMachine();
     }
-    
-    public void joinGroup() {
-        
-        try {
-            group = InetAddress.getByName(inetAddress);
-            MulticastSocket s = new MulticastSocket(port);
-            DatagramSocket socket = new DatagramSocket();
-            
-            s.joinGroup(group);
-            
-        } catch (Exception ex) {
-            //TODO : cenas
-            Logger.getLogger(Node.class.getName()).log(Level.SEVERE, null, ex);
-        }
-    }
-    
+     
     public void addNeighbor(Node Ni){  //TODO:  
         N.add(Ni);
         S.add(Ni);
     }
     private 
-    
-    private boolean changeInput(){
-        //TODO : 
-        new Thread(){
-            @Override
-            public void run(){
-                
-            }
-        }
-        return input;
-    }
     
     private final void stateMachine(){
             
@@ -110,4 +84,3 @@ public class Node {
 }
     
     
-
