@@ -5,23 +5,16 @@
  */
 package leaderelection;
 
-import java.net.DatagramSocket;
-import java.net.InetAddress;
-import java.net.MulticastSocket;
-import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.Queue;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-import javafx.util.Pair;
 
 /**
  *
  * @author alunos
  */
 
-
+//TODO: No fim de uma eleição e antes de voltar para o INIT, meter o message_fifo e variáveis auxiliares a null.
 
 public class Node {
     private final int id;
@@ -29,7 +22,7 @@ public class Node {
     private boolean delta;
     private Integer parent;
     private boolean ackSent;
-    private int lidid;
+    private int lid;
     private boolean initiator; //define se este é o node que vai iniciar a comunicação
     private UDPclient client; 
     private final int port = 12345;
@@ -54,6 +47,7 @@ public class Node {
         this.delta = false;
         this.parent = null;
         this.ackSent = false;
+        this.lid = 0;
         this.N = null;
         this.S = null;
         this.initiator = initiator;
@@ -123,6 +117,8 @@ public class Node {
     
     
     public void stateMachine(){
+        
+        
             
 
         
@@ -130,12 +126,17 @@ public class Node {
    
             @Override
             public void run(){
+                
+               Integer auxReceivedId = null;
+               Integer auxReceivedMostValued = null;
+               Integer auxReceivedLeaderId = null;
+               
                 while(true) {
                     switch (state){
                         case 1: //espera por input ou election
                             if( initiator == true ){
-                                client.sendMessage(id,election);
-                                state = 8;
+                                client.sendMessage(id,election,0,0);
+                                state = 9;
                             }
                             else{ 
                                 String[] receivedMessage = processFIFO();
@@ -160,45 +161,115 @@ public class Node {
                                   System.err.println("Received Unexpected Message in state 0");
                             }
                         case 2:
+                            delta = true;
                             for(Integer S1: S){
-                                client.sendMessage(id, election);
+                                client.sendMessage(id, election,0,0);
                             }
                             state = 3;
                         case 3:
                             String[] receivedMessage = processFIFO();
                             
-                            if( receivedMessage[1].equals(election))
+                            if( receivedMessage[1].equals(election)){
+                                auxReceivedId = Integer.parseInt(receivedMessage[2]);
                                 state = 4;
-                            else if(receivedMessage[1].equals(ack))
+                            }
+                            else if(receivedMessage[1].equals(ack)){
+                                auxReceivedId = Integer.parseInt(receivedMessage[2]);
+                                auxReceivedMostValued = Integer.parseInt(receivedMessage[3]);
                                 state = 5;
+                            }
                             else
                                 System.err.println("Received Unexpected Message in state 3");
                         case 4:
-                            client.sendMessage(id,ack,);
+                            client.sendMessage(id,ack,auxReceivedId,id);
+                            state = 3;
+                        case 5:
                             
+                            ackValues.add( auxReceivedMostValued);
+                            S.remove(auxReceivedId);
+                        
+                            if(S == null)
+                                state = 6;
+                            else 
+                                state = 3;
+                        case 6:
                             
+                            Integer mostValuedAck = 0;
                             
+                            for(Integer N1: N){
+                                if(!N1.equals(parent)){
+                                    if(mostValuedAck < N1)
+                                        mostValuedAck = N1;
+                                }
+                            }
+                            
+                            client.sendMessage(id, ack, parent, mostValuedAck);
+                            state = 7;
+                            
+                        case 7:
+                           
+                            while(true){
                                 
-                                 
+                                String[] expectedLead = processFIFO();
+                            
+                            if((expectedLead[1]).equals(lead)){
                                 
+                                auxReceivedLeaderId = Integer.parseInt(expectedLead[3]);
+                                state = 8;
+                                break;
+                
+                            }
+                            else
+                               System.err.println("Received Unexpected Message in state 7, trying again...");
+                            }
+                        case 8:
+                            lid = auxReceivedLeaderId;
+                            delta = false;
+                            state = 1;
                             
+                            client.sendMessage(id, lead, 0, lid);
                             
+                        case 9:
                             
+                            String[] expectedAck = null;
                             
-                }
-                    
-                    
-                }
-                    
-                    
-                    //state machine were if input from PC or received election
-                    
-                    
+                            while(true){
+                                expectedAck = processFIFO();
+                                if((expectedAck[1]).equals(ack)){
+                                    auxReceivedId = Integer.parseInt(expectedAck[2]);
+                                    auxReceivedMostValued = Integer.parseInt(expectedAck[3]);
+                                    state = 10;
+                                    break;
+                                }
+                            }
+                            
+                        case 10:
+                            ackValues.add( auxReceivedMostValued);
+                            S.remove(auxReceivedId);
+                        
+                            if(S == null)
+                                state = 11;
+                            else 
+                                state = 9;
+                            
+                        case 11:
+                            Integer mostValuedAck2 = 0;
+                            
+                            for(Integer N1: N){
+                                if(!N1.equals(parent)){
+                                    if(mostValuedAck2 < N1)
+                                        mostValuedAck2 = N1;
+                                }
+                            }
+                            
+                            client.sendMessage(id, lead, 0, mostValuedAck2);
+                            state = 1;
+                }     
             }
-        }.start();
+        }
     
     
-    }
+    }.start();
 }
-    
+}
     
