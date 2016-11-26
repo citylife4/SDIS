@@ -77,10 +77,10 @@ public class UDPclient implements Runnable{
         }
     }
     
-    public void sendMessage(int id, String message, int destination){
+    public void sendMessage(int id, String message, int destination, int mostValued){
         
         if(isRunning) {
-            String messageFormated = id + "@" + message + "@" + destination;
+            String messageFormated = id + "@" + message + "@" + destination + "@" + mostValued;
             byte[] toSend = new byte[2048];
             toSend = messageFormated.getBytes();
         
