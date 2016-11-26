@@ -43,6 +43,8 @@ public class LeaderElection {
         Node n = new Node(Integer.parseInt(args[0]),Integer.parseInt(args[1]),initiate);
         
         for(int i=3; i<args.length; i++){
+            int toAdd = Integer.parseInt(args[i]);
+            System.out.println("[Main] Adding from " + i + "with " + toAdd);
             n.addNeighbor(Integer.parseInt(args[i]));
             }
         

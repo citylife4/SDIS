@@ -34,6 +34,7 @@ public class Node {
     private final String ack = "ACK";
     private final String lead = "LEAD"; 
     
+    //
     
     ArrayList<Integer> N;
     ArrayList<Integer> S;
@@ -48,8 +49,8 @@ public class Node {
         this.parent = null;
         this.ackSent = false;
         this.lid = 0;
-        this.N = null;
-        this.S = null;
+        this.N = new ArrayList<>();
+        this.S = new ArrayList<>();
         this.initiator = initiator;
         
         this.client = new UDPclient(id,port,IP);
@@ -59,7 +60,8 @@ public class Node {
         //this.stateMachine();
     }
      
-    public void addNeighbor(Integer Ni){  //TODO:  
+    public void addNeighbor(int Ni){  //TODO:  
+        System.out.println("[NODE] Added: " + Ni);
         N.add(Ni);
         S.add(Ni);
     }
@@ -69,8 +71,9 @@ public class Node {
     }
     
     public static void handlePacket(String message){
-          
+        
         boolean add = message_fifo.add(message); 
+        
     }
     
     public String[] processFIFO(){
@@ -79,6 +82,7 @@ public class Node {
         int messageId;
         
         while(true){
+            while(message_fifo.isEmpty());
             toProcess = ((message_fifo.remove()).toString()).split("@");
             messageId = Integer.parseInt(toProcess[0]);
             
