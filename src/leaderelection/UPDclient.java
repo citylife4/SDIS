@@ -25,7 +25,7 @@ public class UPDclient implements Runnable{
     private MulticastSocket mcSocket = null;
     private InetAddress mcIPAddress = null;
     private boolean isRunning;
-    private DatagramPacket packet;
+    byte[] buffer = new byte[2048];
 
     
     public UPDclient(int pid, int port, String IPStr) {
@@ -36,7 +36,12 @@ public class UPDclient implements Runnable{
     }
     
     public void closeConnection(){
-        isRunning = false;
+        if(isRunning) {
+            isRunning = false;
+            mcSocket.close();
+        }
+        else
+            System.err.println("Is not Running");
     }
     
     @Override
@@ -47,17 +52,22 @@ public class UPDclient implements Runnable{
             mcSocket = new MulticastSocket(mcPort);
             mcSocket.joinGroup(mcIPAddress);
             
-            DatagramPacket packet = new DatagramPacket(new byte[1024], 1024);
+            DatagramPacket receivePacket = new DatagramPacket(buffer, buffer.length);
             isRunning = true;
             
             while(isRunning){
                 try {
-                mcSocket.receive( packet );
-                
-                handlePacket( packet, wBuffer );
-            } catch ( Exception e ) {
-                System.out.println( e.getMessage() );
-            }
+                    
+                    //Wait to receive message
+                    mcSocket.receive( receivePacket );
+                    String msg = new String(buffer, 0, receivePacket.getLength());
+                    Node.handlePacket( msg );
+                    
+                    receivePacket.setLength(buffer.length);
+                    
+                } catch ( Exception e ) {
+                    System.out.println( e.getMessage() );
+                }
             }
                 
             //throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
@@ -66,6 +76,23 @@ public class UPDclient implements Runnable{
         }
     }
     
-    
+    public void sendMessage(int id, String message){
+        
+        if(isRunning) {
+            String messageFormated = id + "@" + message;
+            byte[] toSend = new byte[2048];
+            toSend = messageFormated.getBytes();
+        
+            DatagramPacket sendPacket =
+                  new DatagramPacket(toSend, toSend.length);
+            try {
+                mcSocket.send(sendPacket);
+            } catch (IOException ex) {
+                Logger.getLogger(UPDclient.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        }
+        else
+            System.err.println("Connection not Started");
+    }
     
 }
