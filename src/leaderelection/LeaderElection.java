@@ -30,35 +30,28 @@ public class LeaderElection {
         //start leader election...
         
         // new statemachine (or node method, just do node.state_machine();)
- 
+        boolean initiate;
         
-        /*
-        int mcPort = 12345;
-        String mcIPStr = "230.1.1.1";
-        MulticastSocket mcSocket = null;
-        InetAddress mcIPAddress = null;
-        mcIPAddress = InetAddress.getByName(mcIPStr);
-        mcSocket = new MulticastSocket(mcPort);
-        System.out.println("Multicast Receiver running at:"
-            + mcSocket.getLocalSocketAddress());
-        mcSocket.joinGroup(mcIPAddress);
-
-        DatagramPacket packet = new DatagramPacket(new byte[1024], 1024);
-
-        System.out.println("Waiting for a  multicast message...");
-        while(true){
-            mcSocket.receive(packet);
-        String msg = new String(packet.getData(), packet.getOffset(),
-            packet.getLength());
-        System.out.println("[Multicast  Receiver] Received:" + msg);
-        if(msg.equals("end"))break;
+        if((args[2]).equals("1"))
+            initiate = true; 
+        else
+            initiate = false;
+        
+        
+        
+        
+        Node n = new Node(Integer.parseInt(args[0]),Integer.parseInt(args[1]),initiate);
+        
+        for(int i=3; i<args.length; i++){
+            n.addNeighbor(Integer.parseInt(args[i]));
+            }
+        
+        System.out.println("Starting State Machine");
+        
+        n.stateMachine();
+        
     }
 
-
-    mcSocket.leaveGroup(mcIPAddress);
-    mcSocket.close();
-    */
-    }
-
+        
     
 }
