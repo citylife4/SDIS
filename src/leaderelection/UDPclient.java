@@ -59,10 +59,11 @@ public class UDPclient implements Runnable{
                 try {
                     
                     //Wait to receive message
+                    System.out.println( "A Receber ...." );
                     mcSocket.receive( receivePacket );
                     String msg = new String(buffer, 0, receivePacket.getLength());
-                    Node.handlePacket( msg );
-                    
+                    //Node.handlePacket( msg );
+                    System.err.println( "Recebido: " + msg );
                     receivePacket.setLength(buffer.length);
                     
                 } catch ( Exception e ) {
@@ -76,10 +77,10 @@ public class UDPclient implements Runnable{
         }
     }
     
-    public void sendMessage(int id, String message){
+    public void sendMessage(int id, String message, int destination){
         
         if(isRunning) {
-            String messageFormated = id + "@" + message;
+            String messageFormated = id + "@" + message + "@" + destination;
             byte[] toSend = new byte[2048];
             toSend = messageFormated.getBytes();
         
