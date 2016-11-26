@@ -12,7 +12,6 @@ import java.net.InetAddress;
 import java.net.MulticastSocket;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import leaderelection.Node;
 
 /**
  *
@@ -79,7 +78,7 @@ public final class UDPclient implements Runnable{
                 System.out.println(log +  "A Receber .... " );
                 mcSocket.receive( receivePacket );
                 String msg = new String(buffer, 0, receivePacket.getLength());
-                Node.handlePacket(msg);
+                Outro.handlePacket( msg );
                 System.err.println(log +  "Recebido: " + msg );
                 receivePacket.setLength(buffer.length);
 
