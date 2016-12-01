@@ -8,6 +8,8 @@ package leaderelection;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.Queue;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  *
@@ -35,6 +37,8 @@ public class Node {
     private final String lead = "LEAD"; 
     
     //
+    public static boolean add = false;
+    
     
     ArrayList<Integer> N;
     ArrayList<Integer> S;
@@ -52,12 +56,16 @@ public class Node {
         this.N = new ArrayList<>();
         this.S = new ArrayList<>();
         this.initiator = initiator;
-        
+        //this.stateMachine();
+    }
+    
+    public void init(){
         this.client = new UDPclient(id,port,IP);
         Thread rec = new Thread(this.client);
         rec.start();
-      
-        //this.stateMachine();
+        
+        this.stateMachine();
+        
     }
      
     public void addNeighbor(int Ni){  //TODO:  
@@ -71,8 +79,22 @@ public class Node {
     }
     
     public static void handlePacket(String message){
-        
-        boolean add = message_fifo.add(message); 
+       
+        new Thread()
+        {
+            @Override
+            public void run() {
+                System.out.println("[NODE, handlePacket] Received message: " 
+                        + message);
+                
+                add = message_fifo.add(message); 
+                System.out.println("[NODE, handlePacket] added is " + add + ": "
+                        + message_fifo.peek().toString());
+            }
+            
+            
+        }.start();
+
         
     }
     
@@ -81,14 +103,34 @@ public class Node {
         String[] toProcess = null;
         int messageId;
         
-        while(true){
-            while(message_fifo.isEmpty());
+        while(true) {
+            System.out.println("leaderelection.Node.processFIFO()");
+            while(true) 
+            {
+                try {
+                    Thread.sleep(1000);
+                } catch (InterruptedException ex) {
+                    Logger.getLogger(Node.class.getName()).log(Level.SEVERE, null, ex);
+                    break;
+                }
+                if(add) break;
+            }
+
+            System.out.println("[NODE, processFIFO] fifo: " + message_fifo.peek()
+                    .toString()); 
+            add = false;
+
+
+        
+        
+
             toProcess = ((message_fifo.remove()).toString()).split("@");
             messageId = Integer.parseInt(toProcess[0]);
-            
+            System.out.println("[NODE, processFIFO] To process: " + toProcess[0]);
+
             if(toProcess == null)
                 break;
-            
+
             for (Integer N1 : N) {
                 if(N1 != messageId){
                        continue;
@@ -96,35 +138,27 @@ public class Node {
                 else{
                     return toProcess;
                 }
-                    
+
                 /*if((toProcess[1]).equals(election)){
                         if( parent == null){
                             parent = N1;
                             S.remove(N1);
                         }
                         else{
-                            
+
                         }*/
-                    
-                }
-           
+
             }
-        
-        return null;
-  
+
         }
-        
-        
-    
+        return null;
 
 
-    
-    
+}
+
+        
+   
     public void stateMachine(){
-        
-        
-            
-
         
         new Thread(){
    
@@ -138,64 +172,72 @@ public class Node {
                 while(true) {
                     switch (state){
                         case 1: //espera por input ou election
+                            System.out.println( "[STATE -" + state+ "] initator? = "+initiator);
+                            
                             if( initiator == true ){
                                 client.sendMessage(id,election,0,0);
                                 state = 9;
+  
                             }
                             else{ 
                                 String[] receivedMessage = processFIFO();
-                                
+                                System.out.println("[STATE -" + state+ "] Received: " + receivedMessage[1].toString());
                                 if( receivedMessage[1].equals(election)){
-                                    
                                     parent = Integer.parseInt(receivedMessage[0]);
                                    
                                     for (Integer S1 : S) {
                                         if(S1 == Integer.parseInt(receivedMessage[0])){
                                             S.remove(S1);
                                             break;
-                                        }
-                                            
+                                        }     
                                      }
-                                
-                                
                                 state = 2;
-                                
                                 }
                                 else
-                                  System.err.println("Received Unexpected Message in state 0");
+                                  System.err.println("[STATE -" + state+ "] Received Unexpected Message in state 0");
                             }
+                        break;
+                        
                         case 2:
                             delta = true;
                             for(Integer S1: S){
                                 client.sendMessage(id, election,0,0);
                             }
                             state = 3;
+                            break;
                         case 3:
                             String[] receivedMessage = processFIFO();
                             
                             if( receivedMessage[1].equals(election)){
                                 auxReceivedId = Integer.parseInt(receivedMessage[2]);
                                 state = 4;
+                                break;
                             }
                             else if(receivedMessage[1].equals(ack)){
                                 auxReceivedId = Integer.parseInt(receivedMessage[2]);
                                 auxReceivedMostValued = Integer.parseInt(receivedMessage[3]);
                                 state = 5;
+                                break;
                             }
-                            else
-                                System.err.println("Received Unexpected Message in state 3");
+                            else {
+                                System.err.println("[STATE -" + state+ "] Received Unexpected Message in state 3");
+                                break;
+                            }
                         case 4:
                             client.sendMessage(id,ack,auxReceivedId,id);
                             state = 3;
+                            break;
                         case 5:
                             
                             ackValues.add( auxReceivedMostValued);
                             S.remove(auxReceivedId);
                         
-                            if(S == null)
+                            if(S == null) 
                                 state = 6;
                             else 
                                 state = 3;
+                            
+                            break;
                         case 6:
                             
                             Integer mostValuedAck = 0;
@@ -209,6 +251,7 @@ public class Node {
                             
                             client.sendMessage(id, ack, parent, mostValuedAck);
                             state = 7;
+                            break;
                             
                         case 7:
                            
@@ -224,8 +267,9 @@ public class Node {
                 
                             }
                             else
-                               System.err.println("Received Unexpected Message in state 7, trying again...");
+                               System.err.println("[STATE -" + state+ "] Received Unexpected Message in state 7, trying again...");
                             }
+                            break;
                         case 8:
                             lid = auxReceivedLeaderId;
                             delta = false;
@@ -234,11 +278,12 @@ public class Node {
                             System.out.println("The Leader is"+lid+"!");
                             
                             client.sendMessage(id, lead, 0, lid);
+                            break;
                             
                         case 9:
                             
                             String[] expectedAck = null;
-                            
+                            System.out.println( "[STATE -" + state+ "]");
                             while(true){
                                 expectedAck = processFIFO();
                                 if((expectedAck[1]).equals(ack)){
@@ -248,6 +293,7 @@ public class Node {
                                     break;
                                 }
                             }
+                            break;
                             
                         case 10:
                             ackValues.add( auxReceivedMostValued);
@@ -257,13 +303,14 @@ public class Node {
                                 state = 11;
                             else 
                                 state = 9;
+                            break;
                             
                         case 11:
                             Integer mostValuedAck2 = 0;
                             lid = auxReceivedLeaderId;
                             delta = false;
                             
-                            System.out.println("The Leader is"+lid+"!");
+                            System.out.println( "[STATE -" + state+ "] The Leader is"+lid+"!");
                             
                             for(Integer N1: N){
                                 if(!N1.equals(parent)){
@@ -274,6 +321,7 @@ public class Node {
                             
                             client.sendMessage(id, lead, 0, mostValuedAck2);
                             state = 1;
+                            break;
                 }     
             }
         }

@@ -50,7 +50,7 @@ public class LeaderElection {
         
         System.out.println("Starting State Machine");
         
-        n.stateMachine();
+        n.init();
         
     }
 

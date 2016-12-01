@@ -42,13 +42,13 @@ public final class UDPclient implements Runnable{
     
     public void startConnection(){
         try {
-            System.out.println(log + "Starting Connection ");
+            System.out.println("[UDP, Thread: " + Thread.currentThread().getId() + "] " + "Starting Connection ");
             mcIPAddress = InetAddress.getByName(mcIPStr);
             mcSocket = new MulticastSocket(mcPort);
             mcSocket.joinGroup(mcIPAddress);
             isRunning = true;
         } catch (IOException ex) {
-            System.err.println(log + "Problem on creating socket");
+            System.err.println("[UDP, Thread: " + Thread.currentThread().getId() + "] " + "Problem on creating socket");
             Logger.getLogger(UDPclient.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
@@ -59,7 +59,7 @@ public final class UDPclient implements Runnable{
             mcSocket.close();
         }
         else
-            System.err.println(log + "Is not Running");
+            System.err.println("[UDP, Thread: " + Thread.currentThread().getId() + "] " + "Is not Running");
     }
     
     @Override
@@ -76,15 +76,15 @@ public final class UDPclient implements Runnable{
                 
                 //Wait to receive message
                 //this.sendMessage(1, "2", 3);
-                System.out.println(log +  "A Receber .... " );
+                System.out.println("[UDP, Thread: " + Thread.currentThread().getId() + "] " +  "A Receber .... " );
                 mcSocket.receive( receivePacket );
                 String msg = new String(buffer, 0, receivePacket.getLength());
                 Node.handlePacket( msg );
-                System.err.println(log +  "Recebido: " + msg );
+                System.err.println("[UDP, Thread: " + Thread.currentThread().getId() + "] " +  "Recebido: " + msg );
                 receivePacket.setLength(buffer.length);
 
             } catch ( Exception e ) {
-                System.err.println(log + "Problem on receive");
+                System.err.println("[UDP, Thread: " + Thread.currentThread().getId() + "] " + "Problem on receive");
                 System.out.println( e.getMessage() );
             }
         }
@@ -99,6 +99,8 @@ public final class UDPclient implements Runnable{
             
             @Override
                 public void run() {
+                    
+                    
                   if(!isRunning) {
                     startConnection();
                 }
@@ -106,16 +108,17 @@ public final class UDPclient implements Runnable{
                 String messageFormated = id + "@" + message + "@" + destination + "@" + mostValued;
                 byte[] toSend = new byte[2048];
                 toSend = messageFormated.getBytes();
-                System.out.println(log + "Sending: " + messageFormated + " _ "+  Thread.currentThread().getId());
+                System.out.println("[UDP, Thread: " + Thread.currentThread().getId() + "] " + "Sending: " + messageFormated + " _ "+  Thread.currentThread().getId());
                 
-                DatagramPacket sendPacket =
-                      new DatagramPacket(toSend, toSend.length);
+                DatagramPacket sendPacket = new DatagramPacket(toSend, toSend.length);
                 sendPacket.setAddress(mcIPAddress);
                 sendPacket.setPort(mcPort);
                 try {
                     mcSocket.send(sendPacket);
+                    System.out.println("[UDP, Thread: " + Thread.currentThread().getId() + "] " + "SENT!");
+                    Thread.currentThread().interrupt();
                 } catch (IOException ex) {
-                    System.err.println(log + "Problem Sending");
+                    System.err.println("[UDP, Thread: " + Thread.currentThread().getId() + "] " + "Problem Sending");
                     Logger.getLogger(UDPclient.class.getName()).log(Level.SEVERE, null, ex);
                 }
             }
