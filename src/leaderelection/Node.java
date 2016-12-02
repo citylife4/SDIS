@@ -205,9 +205,9 @@ public class Node {
                         case 2:
                             System.err.println("[BEGIN STATE -" + state+ "]");
                             delta = true;
-                            for(Integer S1: S){
+                            //for(Integer S1: S){
                                 client.sendMessage(id, election,0,0);
-                            }
+                            //}
                             state = 3;
                             break;
                         case 3:
