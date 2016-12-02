@@ -102,6 +102,7 @@ public class Node {
 
         String[] toProcess = null;
         int messageId;
+        int toMe;
         
         while(true) {
             //System.out.println("leaderelection.Node.processFIFO()");
@@ -126,13 +127,15 @@ public class Node {
 
             toProcess = ((message_fifo.remove()).toString()).split("@");
             messageId = Integer.parseInt(toProcess[0]);
-            //System.out.println("[NODE, processFIFO] To process: " + toProcess[0]);
+            toMe = Integer.parseInt(toProcess[2]);
+            
 
             if(toProcess == null)
                 break;
 
             for (Integer N1 : N) {
-                if(N1 != messageId){
+                // Se for meu vizinho e for para mim ou broadcast
+                if(N1 != messageId && (toMe != 0 || toMe != this.id) ){
                        continue;
                     }
                 else{
@@ -209,14 +212,16 @@ public class Node {
                         case 3:
                             System.err.println("[BEGIN STATE -" + state+ "]");
                             String[] receivedMessage = processFIFO();
+                           
                             
                             if( receivedMessage[1].equals(election)){
-                                auxReceivedId = Integer.parseInt(receivedMessage[2]);
+                                auxReceivedId = Integer.parseInt(receivedMessage[0]);
                                 state = 4;
                                 break;
                             }
                             else if(receivedMessage[1].equals(ack)){
-                                auxReceivedId = Integer.parseInt(receivedMessage[2]);
+                                
+                                auxReceivedId = Integer.parseInt(receivedMessage[0]);
                                 auxReceivedMostValued = Integer.parseInt(receivedMessage[3]);
                                 state = 5;
                                 break;
