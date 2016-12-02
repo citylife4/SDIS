@@ -84,12 +84,12 @@ public class Node {
         {
             @Override
             public void run() {
-                System.out.println("[NODE, handlePacket] Received message: " 
-                        + message);
+                //System.out.println("[NODE, handlePacket] Received message: " 
+                //        + message);
                 
                 add = message_fifo.add(message); 
-                System.out.println("[NODE, handlePacket] added is " + add + ": "
-                        + message_fifo.peek().toString());
+                //System.out.println("[NODE, handlePacket] added is " + add + ": "
+                 //       + message_fifo.peek().toString());
             }
             
             
@@ -104,7 +104,7 @@ public class Node {
         int messageId;
         
         while(true) {
-            System.out.println("leaderelection.Node.processFIFO()");
+            //System.out.println("leaderelection.Node.processFIFO()");
             while(true) 
             {
                 try {
@@ -126,7 +126,7 @@ public class Node {
 
             toProcess = ((message_fifo.remove()).toString()).split("@");
             messageId = Integer.parseInt(toProcess[0]);
-            System.out.println("[NODE, processFIFO] To process: " + toProcess[0]);
+            //System.out.println("[NODE, processFIFO] To process: " + toProcess[0]);
 
             if(toProcess == null)
                 break;
@@ -199,6 +199,7 @@ public class Node {
                         break;
                         
                         case 2:
+                            System.err.println("[BEGIN STATE -" + state+ "]");
                             delta = true;
                             for(Integer S1: S){
                                 client.sendMessage(id, election,0,0);
@@ -206,6 +207,7 @@ public class Node {
                             state = 3;
                             break;
                         case 3:
+                            System.err.println("[BEGIN STATE -" + state+ "]");
                             String[] receivedMessage = processFIFO();
                             
                             if( receivedMessage[1].equals(election)){
@@ -224,10 +226,12 @@ public class Node {
                                 break;
                             }
                         case 4:
+                            System.err.println("[BEGIN STATE -" + state+ "]");
                             client.sendMessage(id,ack,auxReceivedId,id);
                             state = 3;
                             break;
                         case 5:
+                            System.err.println("[BEGIN STATE -" + state+ "]");
                             
                             ackValues.add( auxReceivedMostValued);
                             S.remove(auxReceivedId);
@@ -239,6 +243,7 @@ public class Node {
                             
                             break;
                         case 6:
+                            System.err.println("[BEGIN STATE -" + state+ "]");
                             
                             Integer mostValuedAck = 0;
                             
@@ -254,6 +259,7 @@ public class Node {
                             break;
                             
                         case 7:
+                            System.err.println("[BEGIN STATE -" + state+ "]");
                            
                             while(true){
                                 
@@ -271,6 +277,7 @@ public class Node {
                             }
                             break;
                         case 8:
+                            System.err.println("[BEGIN STATE -" + state+ "]");
                             lid = auxReceivedLeaderId;
                             delta = false;
                             state = 1;
@@ -281,7 +288,7 @@ public class Node {
                             break;
                             
                         case 9:
-                            
+                            System.err.println("[BEGIN STATE -" + state+ "]");
                             String[] expectedAck = null;
                             System.out.println( "[STATE -" + state+ "]");
                             while(true){
@@ -296,6 +303,7 @@ public class Node {
                             break;
                             
                         case 10:
+                            System.err.println("[BEGIN STATE -" + state+ "]");
                             ackValues.add( auxReceivedMostValued);
                             S.remove(auxReceivedId);
                         
@@ -306,6 +314,7 @@ public class Node {
                             break;
                             
                         case 11:
+                            System.err.println("[BEGIN STATE -" + state+ "]");
                             Integer mostValuedAck2 = 0;
                             lid = auxReceivedLeaderId;
                             delta = false;
