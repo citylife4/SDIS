@@ -249,9 +249,12 @@ public class Node {
                            
                             if(S.isEmpty()) //Nao e empty
                                 state = 6;
-                            else 
+                            else{
+                                for(int i=0; i<S.size();i++)
+                                    System.err.println(S.get(i)+" ");
                                 state = 3;
                             
+                            } 
                             break;
                         case 6:
                             System.err.println("[BEGIN STATE -" + state+ "]");
