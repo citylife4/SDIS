@@ -212,7 +212,9 @@ public class Node {
                         case 3:
                             System.err.println("[BEGIN STATE -" + state+ "]");
                             String[] receivedMessage = processFIFO();
-                           
+                            System.out.println("RECEBEU: ");
+                            for(int i=0; i< receivedMessage.length; i++)
+                                System.err.println(receivedMessage[i]);
                             
                             if( receivedMessage[1].equals(election)){
                                 auxReceivedId = Integer.parseInt(receivedMessage[0]);
@@ -222,6 +224,7 @@ public class Node {
                             else if(receivedMessage[1].equals(ack)){
                                 
                                 auxReceivedId = Integer.parseInt(receivedMessage[0]);
+                                System.err.println("auxID: " + auxReceivedId);
                                 auxReceivedMostValued = Integer.parseInt(receivedMessage[3]);
                                 state = 5;
                                 break;
