@@ -55,6 +55,7 @@ public class Node {
         this.lid = 0;
         this.N = new ArrayList<>();
         this.S = new ArrayList<>();
+        this.ackValues =  new ArrayList<>();
         this.initiator = initiator;
         //this.stateMachine();
     }
@@ -224,8 +225,9 @@ public class Node {
                             else if(receivedMessage[1].equals(ack)){
                                 
                                 auxReceivedId = Integer.parseInt(receivedMessage[0]);
-                                System.err.println("auxID: " + auxReceivedId);
+                                
                                 auxReceivedMostValued = Integer.parseInt(receivedMessage[3]);
+                                System.err.println("auxID: " + auxReceivedId + " " + auxReceivedMostValued);
                                 state = 5;
                                 break;
                             }
@@ -243,8 +245,9 @@ public class Node {
                             
                             ackValues.add( auxReceivedMostValued);
                             S.remove(auxReceivedId);
-                        
-                            if(S == null) 
+                            
+                           
+                            if(S.isEmpty()) //Nao e empty
                                 state = 6;
                             else 
                                 state = 3;
@@ -270,7 +273,6 @@ public class Node {
                             System.err.println("[BEGIN STATE -" + state+ "]");
                            
                             while(true){
-                                
                                 String[] expectedLead = processFIFO();
                             
                             if((expectedLead[1]).equals(lead)){
@@ -280,8 +282,11 @@ public class Node {
                                 break;
                 
                             }
-                            else
-                               System.err.println("[STATE -" + state+ "] Received Unexpected Message in state 7, trying again...");
+                            else{
+                                System.err.println("[STATE -" + state+ "] Received Unexpected Message in state 7, trying again...");
+                                continue;
+                            }
+                               
                             }
                             break;
                         case 8:
@@ -302,7 +307,7 @@ public class Node {
                             while(true){
                                 expectedAck = processFIFO();
                                 if((expectedAck[1]).equals(ack)){
-                                    auxReceivedId = Integer.parseInt(expectedAck[2]);
+                                    auxReceivedId = Integer.parseInt(expectedAck[0]);
                                     auxReceivedMostValued = Integer.parseInt(expectedAck[3]);
                                     state = 10;
                                     break;
@@ -315,7 +320,7 @@ public class Node {
                             ackValues.add( auxReceivedMostValued);
                             S.remove(auxReceivedId);
                         
-                            if(S == null)
+                            if(S.isEmpty())
                                 state = 11;
                             else 
                                 state = 9;
