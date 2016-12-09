@@ -59,7 +59,7 @@ public final class UDPclient implements Runnable{
             mcSocket.close();
         }
         else
-            System.err.println("[UDP, Thread: " + Thread.currentThread().getId() + "] " + "Is not Running");
+            System.err.println("[UDP, " + Thread.currentThread().getId() + "] " + "Is not Running");
     }
     
     @Override
