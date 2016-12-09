@@ -283,6 +283,8 @@ public class Node {
                                         mostValuedAck = N1;
                                 }
                             }
+                            if (mostValuedAck<value)
+                                mostValuedAck = value;
                             
                             client.sendMessage(id, ack, parent, mostValuedAck);
                             state = 7;
@@ -321,7 +323,8 @@ public class Node {
                             System.out.println("The Leader is"+lid+"!");
                             
                             client.sendMessage(id, lead, 0, lid);
-                            break;
+                            System.out.println("ACABOU LIDER É :" +lid);
+                            return;
                             
                         //STATE 9                            
                         case 9:
@@ -366,11 +369,14 @@ public class Node {
                                         mostValuedAck2 = N1;
                                 }
                             }
+                            if (mostValuedAck2<value)
+                                mostValuedAck2 = value;
                             lid = mostValuedAck2;
                             
                             client.sendMessage(id, lead, 0, mostValuedAck2);
                             state = 1;
-                            break;
+                            System.out.println("ACABOU LIDER É :" +lid);
+                            return;
                 }     
             }
         }
