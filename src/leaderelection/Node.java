@@ -105,10 +105,11 @@ public class Node {
         int messageId;
         int toMe;
         
+        
         while(true) {
             //System.out.println("leaderelection.Node.processFIFO()");
             
-            while(true) 
+            /*while(true) 
             {
                 try {
                     Thread.sleep(1000);
@@ -118,7 +119,7 @@ public class Node {
                 }
                 if(add) break;
             }
-            
+            */
 
             System.out.println("[NODE, processFIFO] fifo: " + message_fifo.peek()
                     .toString()+ " Size: " + message_fifo.size()); 
