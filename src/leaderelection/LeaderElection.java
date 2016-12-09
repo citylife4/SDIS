@@ -32,6 +32,12 @@ public class LeaderElection {
         // new statemachine (or node method, just do node.state_machine();)
         boolean initiate;
         
+        if((args.length < 4))
+        {
+            System.out.println("Arg value invalid");
+            return;
+        }
+        
         if((args[2]).equals("1"))
             initiate = true; 
         else
@@ -44,7 +50,7 @@ public class LeaderElection {
         
         for(int i=3; i<args.length; i++){
             int toAdd = Integer.parseInt(args[i]);
-            System.out.println("[Main] Adding from " + i + "with " + toAdd);
+            //System.out.println("[Main] Adding from " + i + "with " + toAdd);
             n.addNeighbor(Integer.parseInt(args[i]));
             }
         

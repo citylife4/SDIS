@@ -113,10 +113,13 @@ public final class UDPclient implements Runnable{
                 DatagramPacket sendPacket = new DatagramPacket(toSend, toSend.length);
                 sendPacket.setAddress(mcIPAddress);
                 sendPacket.setPort(mcPort);
+                
                 try {
+                    
                     mcSocket.send(sendPacket);
                     System.out.println("[UDP, Thread: " + Thread.currentThread().getId() + "] " + "SENT!");
                     Thread.currentThread().interrupt();
+                    
                 } catch (IOException ex) {
                     System.err.println("[UDP, Thread: " + Thread.currentThread().getId() + "] " + "Problem Sending");
                     Logger.getLogger(UDPclient.class.getName()).log(Level.SEVERE, null, ex);

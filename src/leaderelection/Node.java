@@ -70,7 +70,7 @@ public class Node {
     }
      
     public void addNeighbor(int Ni){  //TODO:  
-        System.out.println("[NODE] Added: " + Ni);
+        System.out.println("[NODE] New neighbor: " + Ni);
         N.add(Ni);
         S.add(Ni);
     }
@@ -89,8 +89,8 @@ public class Node {
                 //        + message);
                 
                 add = message_fifo.add(message); 
-                //System.out.println("[NODE, handlePacket] added is " + add + ": "
-                 //       + message_fifo.peek().toString());
+                System.out.println("[NODE, handlePacket] added is " + add + ": "
+                       + message_fifo.peek().toString());
             }
             
             
@@ -107,6 +107,7 @@ public class Node {
         
         while(true) {
             //System.out.println("leaderelection.Node.processFIFO()");
+            
             while(true) 
             {
                 try {
@@ -117,13 +118,12 @@ public class Node {
                 }
                 if(add) break;
             }
+            
 
             System.out.println("[NODE, processFIFO] fifo: " + message_fifo.peek()
-                    .toString()); 
-            add = false;
+                    .toString()+ " Size: " + message_fifo.size()); 
+            
 
-
-        
         
 
             toProcess = ((message_fifo.remove()).toString()).split("@");
@@ -140,6 +140,7 @@ public class Node {
                        continue;
                     }
                 else{
+                    add = false;
                     return toProcess;
                 }
 
@@ -175,6 +176,8 @@ public class Node {
                
                 while(true) {
                     switch (state){
+                        
+                        //STATE 1
                         case 1: //espera por input ou election
                             System.out.println( "[STATE -" + state+ "] initator? = "+initiator);
                             
@@ -202,6 +205,7 @@ public class Node {
                             }
                         break;
                         
+                        //STATE 2
                         case 2:
                             System.err.println("[BEGIN STATE -" + state+ "]");
                             delta = true;
@@ -210,12 +214,16 @@ public class Node {
                             //}
                             state = 3;
                             break;
+                            
+                        //STATE 3
                         case 3:
                             System.err.println("[BEGIN STATE -" + state+ "]");
                             String[] receivedMessage = processFIFO();
                             System.out.println("RECEBEU: ");
-                            for(int i=0; i< receivedMessage.length; i++)
-                                System.err.println(receivedMessage[i]);
+                            
+                            for (String receivedMessage1 : receivedMessage) {
+                                System.err.println(receivedMessage1);
+                            }
                             
                             if( receivedMessage[1].equals(election)){
                                 auxReceivedId = Integer.parseInt(receivedMessage[0]);
@@ -235,11 +243,15 @@ public class Node {
                                 System.err.println("[STATE -" + state+ "] Received Unexpected Message in state 3");
                                 break;
                             }
+                            
+                        //STATE 4
                         case 4:
                             System.err.println("[BEGIN STATE -" + state+ "]");
                             client.sendMessage(id,ack,auxReceivedId,id);
                             state = 3;
                             break;
+                            
+                        //STATE 5
                         case 5:
                             System.err.println("[BEGIN STATE -" + state+ "]");
                             
@@ -256,6 +268,8 @@ public class Node {
                             
                             } 
                             break;
+                            
+                        //STATE 6
                         case 6:
                             System.err.println("[BEGIN STATE -" + state+ "]");
                             
@@ -271,7 +285,8 @@ public class Node {
                             client.sendMessage(id, ack, parent, mostValuedAck);
                             state = 7;
                             break;
-                            
+                        
+                        //STATE 7
                         case 7:
                             System.err.println("[BEGIN STATE -" + state+ "]");
                            
@@ -290,8 +305,11 @@ public class Node {
                                 continue;
                             }
                                
-                            }
-                            break;
+                        }
+                        
+                        break;
+                        
+                        //STATE 8
                         case 8:
                             System.err.println("[BEGIN STATE -" + state+ "]");
                             lid = auxReceivedLeaderId;
@@ -303,6 +321,7 @@ public class Node {
                             client.sendMessage(id, lead, 0, lid);
                             break;
                             
+                        //STATE 9                            
                         case 9:
                             System.err.println("[BEGIN STATE -" + state+ "]");
                             String[] expectedAck = null;
@@ -318,6 +337,7 @@ public class Node {
                             }
                             break;
                             
+                        //STATE 10                            
                         case 10:
                             System.err.println("[BEGIN STATE -" + state+ "]");
                             ackValues.add( auxReceivedMostValued);
