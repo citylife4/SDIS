@@ -120,43 +120,45 @@ public class Node {
                 if(add) break;
             }
             */
+            if(!message_fifo.isEmpty()) {
+                
 
-            System.out.println("[NODE, processFIFO] fifo: " + message_fifo.peek()
-                    .toString()+ " Size: " + message_fifo.size()); 
-            
+                System.out.println("[NODE, processFIFO] fifo: " + message_fifo.peek()
+                        .toString()+ " Size: " + message_fifo.size()); 
 
-        
 
-            toProcess = ((message_fifo.remove()).toString()).split("@");
-            messageId = Integer.parseInt(toProcess[0]);
-            toMe = Integer.parseInt(toProcess[2]);
-            
 
-            if(toProcess == null)
-                break;
 
-            for (Integer N1 : N) {
-                // Se for meu vizinho e for para mim ou broadcast
-                if(N1 != messageId && (toMe != 0 || toMe != this.id) ){
-                       continue;
-                    }
-                else{
-                    add = false;
-                    return toProcess;
-                }
+                toProcess = ((message_fifo.remove()).toString()).split("@");
+                messageId = Integer.parseInt(toProcess[0]);
+                toMe = Integer.parseInt(toProcess[2]);
 
-                /*if((toProcess[1]).equals(election)){
-                        if( parent == null){
-                            parent = N1;
-                            S.remove(N1);
+
+                if(toProcess == null)
+                    break;
+
+                for (Integer N1 : N) {
+                    // Se for meu vizinho e for para mim ou broadcast
+                    if(N1 != messageId && (toMe != 0 || toMe != this.id) ){
+                           continue;
                         }
-                        else{
+                    else{
+                        add = false;
+                        return toProcess;
+                    }
 
-                        }*/
+                    /*if((toProcess[1]).equals(election)){
+                            if( parent == null){
+                                parent = N1;
+                                S.remove(N1);
+                            }
+                            else{
+
+                            }*/
 
             }
-
         }
+    }
         return null;
 
 
@@ -188,6 +190,7 @@ public class Node {
   
                             }
                             else{ 
+                                
                                 String[] receivedMessage = processFIFO();
                                 System.out.println("[STATE -" + state+ "] Received: " + receivedMessage[1].toString());
                                 if( receivedMessage[1].equals(election)){
