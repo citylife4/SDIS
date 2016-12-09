@@ -109,7 +109,7 @@ public class Node {
         while(true) {
             System.out.println("leaderelection.Node.processFIFO() " + message_fifo.size());
             
-            while(true) 
+            while(message_fifo.isEmpty())
             {
                 try {
                     Thread.sleep(1000);
@@ -117,7 +117,6 @@ public class Node {
                     Logger.getLogger(Node.class.getName()).log(Level.SEVERE, null, ex);
                     break;
                 }
-                if(!message_fifo.isEmpty()) break;
             }
 
                 
