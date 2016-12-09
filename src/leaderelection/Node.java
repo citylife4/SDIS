@@ -107,9 +107,9 @@ public class Node {
         
         
         while(true) {
-            //System.out.println("leaderelection.Node.processFIFO()");
+            System.out.println("leaderelection.Node.processFIFO() " + message_fifo.size());
             
-            /*while(true) 
+            while(true) 
             {
                 try {
                     Thread.sleep(1000);
@@ -117,10 +117,9 @@ public class Node {
                     Logger.getLogger(Node.class.getName()).log(Level.SEVERE, null, ex);
                     break;
                 }
-                if(add) break;
+                if(!message_fifo.isEmpty()) break;
             }
-            */
-            if(!message_fifo.isEmpty()) {
+
                 
 
                 System.out.println("[NODE, processFIFO] fifo: " + message_fifo.peek()
@@ -158,7 +157,7 @@ public class Node {
 
             }
         }
-    }
+    
         return null;
 
 
@@ -192,7 +191,7 @@ public class Node {
                             else{ 
                                 
                                 String[] receivedMessage = processFIFO();
-                                System.out.println("[STATE -" + state+ "] Received: " + receivedMessage[1].toString());
+                                System.out.println("[STATE -" + state+ "] Received: " + receivedMessage[1]);
                                 if( receivedMessage[1].equals(election)){
                                     parent = Integer.parseInt(receivedMessage[0]);
                                    
