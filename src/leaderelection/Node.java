@@ -277,12 +277,15 @@ public class Node {
                             
                             Integer mostValuedAck = 0;
                             
-                            for(Integer N1: N){
-                                if(!N1.equals(parent)){
-                                    if(mostValuedAck < N1)
-                                        mostValuedAck = N1;
+                            if(!ackValues.isEmpty()){
+                                for(Integer N1: ackValues){
+                                    if(!N1.equals(parent)){
+                                        if(mostValuedAck < N1)
+                                            mostValuedAck = N1;
+                                    }
                                 }
                             }
+                            
                             if (mostValuedAck<value)
                                 mostValuedAck = value;
                             
@@ -318,7 +321,7 @@ public class Node {
                             System.err.println("[BEGIN STATE -" + state+ "]");
                             lid = auxReceivedLeaderId;
                             delta = false;
-                            state = 1;
+                            //state = 1;
                             
                             System.out.println("The Leader is"+lid+"!");
                             
@@ -363,7 +366,7 @@ public class Node {
                             
                             System.out.println( "[STATE -" + state+ "] The Leader is"+lid+"!");
                             
-                            for(Integer N1: N){
+                            for(Integer N1: ackValues){
                                 if(!N1.equals(parent)){
                                     if(mostValuedAck2 < N1)
                                         mostValuedAck2 = N1;
