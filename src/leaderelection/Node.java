@@ -327,10 +327,11 @@ public class Node {
                         case 9:
                             System.err.println("[BEGIN STATE -" + state+ "]");
                             String[] expectedAck = null;
-                            System.out.println( "[STATE -" + state+ "]");
+
                             while(true){
                                 expectedAck = processFIFO();
                                 if((expectedAck[1]).equals(ack)){
+                                    System.out.println("expectedACK: " + expectedAck[0] + " " + expectedAck[1] + " " + expectedAck[2] + " " + expectedAck[3] + " ") ;
                                     auxReceivedId = Integer.parseInt(expectedAck[0]);
                                     auxReceivedMostValued = Integer.parseInt(expectedAck[3]);
                                     state = 10;
