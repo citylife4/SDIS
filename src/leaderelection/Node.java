@@ -355,7 +355,7 @@ public class Node {
                         case 11:
                             System.err.println("[BEGIN STATE -" + state+ "]");
                             Integer mostValuedAck2 = 0;
-                            lid = auxReceivedLeaderId;
+                            
                             delta = false;
                             
                             System.out.println( "[STATE -" + state+ "] The Leader is"+lid+"!");
@@ -366,6 +366,7 @@ public class Node {
                                         mostValuedAck2 = N1;
                                 }
                             }
+                            lid = mostValuedAck2;
                             
                             client.sendMessage(id, lead, 0, mostValuedAck2);
                             state = 1;
