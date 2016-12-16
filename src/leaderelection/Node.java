@@ -137,12 +137,12 @@ public class Node {
 
                 for (Integer N1 : N) {
                     // Se for meu vizinho e for para mim ou broadcast
-                    if(N1 != messageId && (toMe != 0 || toMe != this.id) ){
-                           continue;
+                    if(N1 == messageId && (toMe == 0 || toMe == this.id) ){
+                                                   add = false;
+                        return toProcess;
                         }
                     else{
-                        add = false;
-                        return toProcess;
+                        continue;
                     }
 
                     /*if((toProcess[1]).equals(election)){
