@@ -46,7 +46,7 @@ public class Node {
     
     //
     public static boolean add = false;
-    
+    long startTime;
     
     ArrayList<Integer> N;
     ArrayList<Integer> S;
@@ -55,7 +55,7 @@ public class Node {
     static int state = 1;
      
     public Node(int id, int value, boolean initiator){
-        this.DEBUG = true;
+        this.DEBUG = false;
         this.id = id;
         this.value = value;
         this.delta = false;
@@ -101,8 +101,10 @@ public class Node {
                     //System.out.println("[NODE, handlePacket] Received message: "
                     //        + message);
                     add = message_fifo.add(message);
+                    /*
                     System.out.println("[NODE, handlePacket] added is " + add + ": "
                        + message_fifo.peek().toString());
+                    */
                 } finally {
                     lock.unlock();
                 }
@@ -225,7 +227,7 @@ public class Node {
                Integer auxReceivedId = null;
                Integer auxReceivedMostValued = null;
                Integer auxReceivedLeaderId = null;
-               
+               Integer mostValuedAck = 0;
                 while(true) {
                    OUTER:
                    switch (state) {
@@ -315,7 +317,7 @@ public class Node {
                            if(DEBUG)
                                System.err.println("[BEGIN STATE -" + state+ "]");
                            
-                           Integer mostValuedAck = 0;
+                           
                            
                            if(!ackValues.isEmpty()){
                                for(Integer N1: ackValues){
@@ -346,13 +348,25 @@ public class Node {
                                    break;
                                    
                                }
+                               else if((expectedLead[1].equals(election))){
+                                   state = 71;
+                                   break;
+                               }
                                else{
-                                   System.err.println("[STATE -" + state+ "] Received Unexpected Message in state 7, trying again...");
+                                   System.err.println("[STATE -" + state+ "] Received Unexpected Message in state 7");
                                }
                                
                            }
                            
                            break;
+                           
+                        case 71 :
+                           if(DEBUG)
+                               System.err.println("[BEGIN STATE -" + state+ "]");
+                           client.sendMessage(id,ack,mostValuedAck,id);
+                           state = 7;
+                           break;
+                           
                        case 8:
                            if(DEBUG)
                                System.err.println("[BEGIN STATE -" + state+ "]");
@@ -366,6 +380,9 @@ public class Node {
                            System.out.println("[Node "+id +"] ACABOU LIDER É :" +lid);
                            return;
                        case 9:
+                           
+                           startTime = System.currentTimeMillis();
+                           
                            if(DEBUG)
                                System.err.println("[BEGIN STATE -" + state+ "]");
                            String[] expectedAck;
@@ -414,9 +431,13 @@ public class Node {
                            
                            client.sendMessage(id, lead, 0, mostValuedAck2);
                            state = 1;
-                           System.out.println("[Node "+id +"] ACABOU LIDER É :" +lid);
+                           long estimatedTime = System.currentTimeMillis() - startTime;
+                           System.out.println("[Node "+id +"] ACABOU LIDER É :" +lid +"\n Elapsed Time: " + estimatedTime);
                            return;
+                           
+                           
                    }
+                   
             }
         }
     

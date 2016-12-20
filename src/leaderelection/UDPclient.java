@@ -82,7 +82,7 @@ public final class UDPclient implements Runnable{
                 mcSocket.receive( receivePacket );
                 String msg = new String(buffer, 0, receivePacket.getLength());
                 Node.handlePacket( msg );
-                System.err.println("[UDP, Thread: " + Thread.currentThread().getId() + "] " +  "Recebido: " + msg );
+                //System.err.println("[UDP, Thread: " + Thread.currentThread().getId() + "] " +  "Recebido: " + msg );
                 receivePacket.setLength(buffer.length);
 
             } catch ( IOException e ) {
