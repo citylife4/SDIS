@@ -8,6 +8,10 @@ package leaderelection;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.Queue;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.locks.Condition;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -38,6 +42,8 @@ public class Node {
     private final String ack = "ACK";
     private final String lead = "LEAD"; 
     
+    public static ReentrantLock lock;
+    
     //
     public static boolean add = false;
     
@@ -60,6 +66,7 @@ public class Node {
         this.S = new ArrayList<>();
         this.ackValues =  new ArrayList<>();
         this.initiator = initiator;
+        Node.lock = new ReentrantLock();
         //this.stateMachine();
     }
     
@@ -88,13 +95,19 @@ public class Node {
         {
             @Override
             public void run() {
-                //System.out.println("[NODE, handlePacket] Received message: " 
-                //        + message);
-                
-                add = message_fifo.add(message); 
-               /* System.out.println("[NODE, handlePacket] added is " + add + ": "
+               Thread.currentThread().setName("handlePacketThread-" + Thread.currentThread().getId());
+               lock.lock();
+                try {
+                    //System.out.println("[NODE, handlePacket] Received message: "
+                    //        + message);
+                    add = message_fifo.add(message);
+                    System.out.println("[NODE, handlePacket] added is " + add + ": "
                        + message_fifo.peek().toString());
-            */
+                } finally {
+                    lock.unlock();
+                }
+               
+            
             }
             
             
@@ -108,28 +121,38 @@ public class Node {
         String[] toProcess ;
         int messageId;
         int toMe;
-        
+        String message ;
         
         while(true) {
+            
+            
+            
             
             while( message_fifo == null || message_fifo.isEmpty())
             {
                 try {
-                    Thread.sleep(10);
+                    Thread.sleep(100);
                 } catch (InterruptedException ex) {
+                    System.err.println("ERROR!");
                     Logger.getLogger(Node.class.getName()).log(Level.SEVERE, null, ex);
-                    break;
+                    //break;
                 }
             }
-
+            
+                //System.err.println("OLA:" + message_fifo + " " +  message_fifo.isEmpty());
             /*    
                 if(DEBUG)
                     System.out.println("[NODE, processFIFO] Last in FIFO: " + message_fifo.peek()
                         .toString()+ " Size: " + message_fifo.size()); 
 
             */
-
-                String message = message_fifo.remove().toString();
+                lock.lock();
+                try {
+                    message = message_fifo.remove().toString();
+                    } finally {
+                    lock.unlock();
+                }
+                
                 toProcess = message.split("@");
                 messageId = Integer.parseInt(toProcess[0]);
                 toMe = Integer.parseInt(toProcess[2]);
@@ -148,7 +171,9 @@ public class Node {
                     else{
                         continue;
                     }
-
+                }
+                    
+                    
                     /*if((toProcess[1]).equals(election)){
                             if( parent == null){
                                 parent = N1;
@@ -159,7 +184,7 @@ public class Node {
                             }*/
 
             }
-        }
+        
     
         return null;
 
@@ -174,6 +199,7 @@ public class Node {
    
             @Override
             public void run(){
+               Thread.currentThread().setName("stateMachineThread-" + Thread.currentThread().getId());
                 
                Integer auxReceivedId = null;
                Integer auxReceivedMostValued = null;

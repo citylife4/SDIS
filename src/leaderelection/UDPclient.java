@@ -37,18 +37,19 @@ public final class UDPclient implements Runnable{
         this.mcIPStr = IPStr;
         this.mcPort = port;
         log  = "[UDP, Thread: " + Thread.currentThread().getId() + "] ";
+        Thread.currentThread().setName("UDPThread");
         startConnection();
     }
     
     public void startConnection(){
         try {
-            System.out.println("[UDP, Thread: " + Thread.currentThread().getId() + "] " + "Starting Connection ");
+            System.out.println("[UDP, Node: " + Thread.currentThread().getId() + "] " + "Starting Connection ");
             mcIPAddress = InetAddress.getByName(mcIPStr);
             mcSocket = new MulticastSocket(mcPort);
             mcSocket.joinGroup(mcIPAddress);
             isRunning = true;
         } catch (IOException ex) {
-            System.err.println("[UDP, Thread: " + Thread.currentThread().getId() + "] " + "Problem on creating socket");
+            System.err.println("[UDP, Node: " + Thread.currentThread().getId() + "] " + "Problem on creating socket");
             Logger.getLogger(UDPclient.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
@@ -83,7 +84,7 @@ public final class UDPclient implements Runnable{
                 System.err.println("[UDP, Thread: " + Thread.currentThread().getId() + "] " +  "Recebido: " + msg );
                 receivePacket.setLength(buffer.length);
 
-            } catch ( Exception e ) {
+            } catch ( IOException e ) {
                 System.err.println("[UDP, Thread: " + Thread.currentThread().getId() + "] " + "Problem on receive");
                 System.out.println( e.getMessage() );
             }
