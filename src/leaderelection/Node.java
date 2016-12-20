@@ -35,7 +35,7 @@ public class Node {
     private UDPclient client; 
     private final int port = 12345;
     private final String IP = "225.1.2.3";
-    private static Queue message_fifo =new LinkedList();
+    private static Queue message_fifo = new LinkedList();
     
     //Defines for the Message types
     private final String election = "ELECTION";
@@ -128,6 +128,32 @@ public class Node {
             
             
             
+            while( true )
+            {
+                
+                lock.lock();
+                try { 
+                    if(message_fifo != null && !message_fifo.isEmpty()) {
+                        message = message_fifo.remove().toString();
+                        break;
+                    }
+                } finally {
+                    lock.unlock();
+                }
+                
+                try {
+                    Thread.sleep(100);
+                } catch (InterruptedException ex) {
+                    System.err.println("ERROR!");
+                    Logger.getLogger(Node.class.getName()).log(Level.SEVERE, null, ex);
+                    //break;
+                }
+                
+                
+            }
+            
+            /*
+            
             while( message_fifo == null || message_fifo.isEmpty())
             {
                 try {
@@ -140,18 +166,13 @@ public class Node {
             }
             
                 //System.err.println("OLA:" + message_fifo + " " +  message_fifo.isEmpty());
-            /*    
+                
                 if(DEBUG)
                     System.out.println("[NODE, processFIFO] Last in FIFO: " + message_fifo.peek()
                         .toString()+ " Size: " + message_fifo.size()); 
 
             */
-                lock.lock();
-                try {
-                    message = message_fifo.remove().toString();
-                    } finally {
-                    lock.unlock();
-                }
+              
                 
                 toProcess = message.split("@");
                 messageId = Integer.parseInt(toProcess[0]);

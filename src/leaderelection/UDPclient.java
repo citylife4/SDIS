@@ -78,6 +78,7 @@ public final class UDPclient implements Runnable{
                 //Wait to receive message
                 //this.sendMessage(1, "2", 3);
                 //System.out.println("[UDP, Thread: " + Thread.currentThread().getId() + "] " +  "A Receber .... " );
+                
                 mcSocket.receive( receivePacket );
                 String msg = new String(buffer, 0, receivePacket.getLength());
                 Node.handlePacket( msg );
