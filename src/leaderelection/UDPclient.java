@@ -76,7 +76,7 @@ public final class UDPclient implements Runnable{
                 
                 //Wait to receive message
                 //this.sendMessage(1, "2", 3);
-                System.out.println("[UDP, Thread: " + Thread.currentThread().getId() + "] " +  "A Receber .... " );
+                //System.out.println("[UDP, Thread: " + Thread.currentThread().getId() + "] " +  "A Receber .... " );
                 mcSocket.receive( receivePacket );
                 String msg = new String(buffer, 0, receivePacket.getLength());
                 Node.handlePacket( msg );
@@ -108,7 +108,8 @@ public final class UDPclient implements Runnable{
                 String messageFormated = id + "@" + message + "@" + destination + "@" + mostValued;
                 byte[] toSend = new byte[2048];
                 toSend = messageFormated.getBytes();
-                System.out.println("[UDP, Thread: " + Thread.currentThread().getId() + "] " + "Sending: " + messageFormated + " _ "+  Thread.currentThread().getId());
+                System.out.println("[UDP, Thread: " + Thread.currentThread().getId() + "] "
+                        + "Sending: " + messageFormated + " _ "+  Thread.currentThread().getId());
                 
                 DatagramPacket sendPacket = new DatagramPacket(toSend, toSend.length);
                 sendPacket.setAddress(mcIPAddress);
@@ -117,7 +118,10 @@ public final class UDPclient implements Runnable{
                 try {
                     
                     mcSocket.send(sendPacket);
-                    System.out.println("[UDP, Thread: " + Thread.currentThread().getId() + "] " + "SENT!");
+                    /*
+                    System.out.println("[UDP, Thread: " + Thread.currentThread().getId() + "] " 
+                            + messageFormated + " Sent.");
+                    */
                     Thread.currentThread().interrupt();
                     
                 } catch (IOException ex) {
