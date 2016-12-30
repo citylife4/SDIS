@@ -10,6 +10,7 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.Queue;
 import java.util.concurrent.TimeUnit;
@@ -348,7 +349,7 @@ public class Node {
                                     state = 71;
                                     break;
                                 } else {
-                                    System.err.println("[STATE -" + state + "] Received Unexpected Message in state 7");
+                                    System.err.println("[STATE -" + state + "] Received Unexpected Message in state 7 : " + Arrays.deepToString(expectedLead));
                                 }
 
                             }
@@ -448,7 +449,7 @@ public class Node {
                             try {
                                 Files.write(Paths.get("/usr/users2/mieec2012/ee12061/NetBeansProjects/sdis/dist/myfile.txt"), (Integer.toString(nMessage) + ' ' + time/1000000 + '\n').getBytes(), StandardOpenOption.APPEND);
                             } catch (IOException e) {
-                                System.out.println("nao ha ficheiro");
+                                System.out.println("Nao ha ficheiro");
                             }
                             
                             System.out.println("[Node " + id + "] ACABOU LIDER É :" + lid + "\n Elapsed Time: " + time / 1000000);
