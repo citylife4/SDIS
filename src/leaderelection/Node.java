@@ -363,7 +363,7 @@ public class Node {
                             if (DEBUG) {
                                 System.err.println("[BEGIN STATE -" + state + "]");
                             }
-                            client.sendMessage(id, ack, toSendDestination, id);
+                            client.sendMessage(id, ack, toSendDestination, mostValuedAck);
                             state = 7;
                             break;
 
