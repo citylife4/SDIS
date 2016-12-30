@@ -40,6 +40,7 @@ public class Node {
     private final String IP = "225.1.2.3";
     private static Queue message_fifo = new LinkedList();
     public int nMessage = 0;
+    public int toSendDestination = 0;
 
     //Defines for the Message types
     private final String election = "ELECTION";
@@ -59,7 +60,7 @@ public class Node {
     static int state = 1;
 
     public Node(int id, int value, boolean initiator) {
-        this.DEBUG = false;
+        this.DEBUG = true;
         this.id = id;
         this.value = value;
         this.delta = false;
@@ -236,6 +237,7 @@ public class Node {
                                 if (receivedMessage[1].equals(election)) {
                                     parent = Integer.parseInt(receivedMessage[0]);
 
+                                    //Remove parent from Si
                                     for (Integer S1 : S) {
                                         if (S1 == Integer.parseInt(receivedMessage[0])) {
                                             S.remove(S1);
@@ -346,6 +348,7 @@ public class Node {
                                     break;
 
                                 } else if ((expectedLead[1].equals(election))) {
+                                    toSendDestination = Integer.parseInt(expectedLead[0]);
                                     state = 71;
                                     break;
                                 } else {
@@ -360,7 +363,7 @@ public class Node {
                             if (DEBUG) {
                                 System.err.println("[BEGIN STATE -" + state + "]");
                             }
-                            client.sendMessage(id, ack, mostValuedAck, id);
+                            client.sendMessage(id, ack, toSendDestination, id);
                             state = 7;
                             break;
 
