@@ -11,11 +11,9 @@ import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.Queue;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.locks.Condition;
-import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -24,21 +22,24 @@ import java.util.logging.Logger;
  *
  * @author alunos
  */
-//TODO: No fim de uma eleição e antes de voltar para o INIT, meter o message_fifo e variáveis auxiliares a null.
+//TODO: No fim de uma eleição e antes de voltar para o INIT, meter o messageFifo e variáveis auxiliares a null.
 public class Node {
 
     private final boolean DEBUG;
-    private final int id;
+    private static int id;
     private final int value;
     private boolean delta;
     private Integer parent;
     private boolean ackSent;
-    private int lid;
+    private static int lid;
     private boolean initiator; //define se este é o node que vai iniciar a comunicação
     private UDPclient client;
     private final int port = 12345;
     private final String IP = "225.1.2.3";
-    private static Queue message_fifo = new LinkedList();
+    private static Queue messageFifo = new LinkedList();
+    private static Queue replyFifo = new LinkedList();
+    private static Queue probeFifo = new LinkedList();
+
     public int nMessage = 0;
     public int toSendDestination = 0;
 
@@ -47,14 +48,18 @@ public class Node {
     private final String ack = "ACK";
     private final String lead = "LEAD";
 
-    public static ReentrantLock lock;
+    private static boolean notEnd = false;
+
+    public static ReentrantLock messageFifoLock;
+    public static ReentrantLock replyFifoLock;
+    public static ReentrantLock probeFifoLock;
 
     //
     public static boolean add = false;
     long startTime;
 
-    ArrayList<Integer> N;
-    ArrayList<Integer> S;
+    ArrayList<Integer> nList;
+    final ArrayList<Integer> sList;
     ArrayList<Integer> ackValues;
 
     static int state = 1;
@@ -67,27 +72,34 @@ public class Node {
         this.parent = null;
         this.ackSent = false;
         this.lid = 0;
-        this.N = new ArrayList<>();
-        this.S = new ArrayList<>();
+        this.nList = new ArrayList<>();
+        this.sList = new ArrayList<>();
         this.ackValues = new ArrayList<>();
         this.initiator = initiator;
-        Node.lock = new ReentrantLock();
+        Node.messageFifoLock = new ReentrantLock();
+        Node.replyFifoLock = new ReentrantLock();
+        Node.probeFifoLock = new ReentrantLock();
         //this.stateMachine();
     }
 
     public void init() {
+        //Create UDP client
         this.client = new UDPclient(id, port, IP);
         Thread rec = new Thread(this.client);
         rec.start();
 
+        //Start sendPing thead
+        this.receiveReply();
+
+        //Start State machine
         this.stateMachine();
 
     }
 
     public void addNeighbor(int Ni) {  //TODO:  
         System.out.println("[NODE] New neighbor: " + Ni);
-        N.add(Ni);
-        S.add(Ni);
+        nList.add(Ni);
+        sList.add(Ni);
     }
 
     public int getId() {
@@ -99,20 +111,145 @@ public class Node {
         new Thread() {
             @Override
             public void run() {
-                Thread.currentThread().setName("handlePacketThread-" + Thread.currentThread().getId());
-                lock.lock();
-                try {
-                    //System.out.println("[NODE, handlePacket] Received message: "
-                    //        + message);
-                    add = message_fifo.add(message);
-                    /*
-                    System.out.println("[NODE, handlePacket] added is " + add + ": "
-                       + message_fifo.peek().toString());
-                     */
-                } finally {
-                    lock.unlock();
+                Thread.currentThread().setName("handlePacketThread");
+
+                if (message.contains("REPLY")) {
+                    replyFifoLock.lock();
+                    try {
+                        replyFifo.add(message);
+                    } finally {
+                        replyFifoLock.unlock();
+                    }
+                } else if (message.contains("PROBE")) {
+
+                    probeFifoLock.lock();
+                    try {
+                        probeFifo.add(message);
+                    } finally {
+                        probeFifoLock.unlock();
+
+                    }
+
+                } else {
+                    messageFifoLock.lock();
+                    try {
+                        messageFifo.add(message);
+                    } finally {
+                        messageFifoLock.unlock();
+                    }
                 }
 
+            }
+
+        }.start();
+
+    }
+
+    public void receiveReply() {
+
+        new Thread() {
+
+            @Override
+            public void run() {
+                String message = null;
+                Thread.currentThread().setName("receiveReply");
+                while (true) {
+                    Boolean flag = false;
+                    synchronized (probeFifo) {
+                        if (probeFifo != null && !probeFifo.isEmpty()) {
+                            flag = true;
+                            message = probeFifo.remove().toString();
+                        }
+                    }
+                    if (flag) {
+                        if (Integer.parseInt(message.split("\\@")[2]) == id) {
+                            System.out.println("[PROBE] Sending reply: " + Integer.parseInt(message.split("\\@")[0]));
+                            client.sendMessage(id, "REPLY", Integer.parseInt(message.split("\\@")[0]), 0);
+
+                        } else {
+                            //System.out.println(Integer.parseInt(message.split("\\@")[2]) + " != " + id);
+                        }
+                    }
+                }
+
+            }
+
+        }.start();
+
+    }
+
+    public void sendPing() {
+
+        new Thread() {
+            @Override
+            public void run() {
+
+                String message;
+                long initialTime;
+                //long timout = 1000000000; //1SECOND
+                long timout = 10000; //1SECOND
+
+                Thread.currentThread().setName("sendPing");
+
+                while (true) {
+                    //send Ping
+                    if (lid != 0) {
+                        return;
+                    }
+
+                    synchronized (sList) {
+                        for (Integer S1 : sList) {
+                            //for each Si
+                            client.sendMessage(id, "PROBE", S1, 0);
+                        }
+                    }
+                    initialTime = System.nanoTime();
+
+                    while (true) {
+                        try {
+                            Thread.sleep(timout);
+
+                            if (lid != 0) {
+                                return;
+                            }
+
+                            ArrayList<Integer> toCheck = new ArrayList();
+
+                            if (System.nanoTime() > initialTime + timout) {
+                                System.err.println("TIMOUT = " + lid);
+                                replyFifoLock.lock();
+                                try {
+                                    for (Iterator it = replyFifo.iterator(); it.hasNext();) {
+                                        Object messages = it.next();
+                                        int id = Integer.parseInt(String.valueOf(messages).split("\\@")[0]);
+                                        toCheck.add(id);
+                                    }
+                                } finally {
+                                    replyFifoLock.unlock();
+                                }
+
+                                synchronized (sList) {
+                                    //S.removeAll(toCheck);
+                                    sList.forEach(idtmp -> {
+                                        if (!toCheck.contains(idtmp)) {
+                                            sList.remove(idtmp);
+                                        }
+                                    });
+
+                                    sList.forEach(idtmp -> {
+                                        System.out.println(idtmp);
+                                    });
+                                }
+
+                                break;
+
+                            }
+                        } catch (InterruptedException ex) {
+                            Logger.getLogger(Node.class.getName()).log(Level.SEVERE, null, ex);
+                        }
+
+                    }
+                }
             }
 
         }.start();
@@ -130,21 +267,23 @@ public class Node {
 
             while (true) {
 
-                lock.lock();
+                messageFifoLock.lock();
                 try {
-                    if (message_fifo != null && !message_fifo.isEmpty()) {
-                        message = message_fifo.remove().toString();
+                    if (messageFifo != null && !messageFifo.isEmpty()) {
+                        message = messageFifo.remove().toString();
                         break;
                     }
                 } finally {
-                    lock.unlock();
+                    messageFifoLock.unlock();
                 }
 
                 try {
                     Thread.sleep(100);
                 } catch (InterruptedException ex) {
                     System.err.println("ERROR!");
-                    Logger.getLogger(Node.class.getName()).log(Level.SEVERE, null, ex);
+                    Logger
+                            .getLogger(Node.class
+                                    .getName()).log(Level.SEVERE, null, ex);
                     //break;
                 }
 
@@ -152,7 +291,7 @@ public class Node {
 
             /*
             
-            while( message_fifo == null || message_fifo.isEmpty())
+            while( messageFifo == null || messageFifo.isEmpty())
             {
                 try {
                     Thread.sleep(100);
@@ -163,11 +302,11 @@ public class Node {
                 }
             }
             
-                //System.err.println("OLA:" + message_fifo + " " +  message_fifo.isEmpty());
+                //System.err.println("OLA:" + messageFifo + " " +  messageFifo.isEmpty());
                 
                 if(DEBUG)
-                    System.out.println("[NODE, processFIFO] Last in FIFO: " + message_fifo.peek()
-                        .toString()+ " Size: " + message_fifo.size()); 
+                    System.out.println("[NODE, processFIFO] Last in FIFO: " + messageFifo.peek()
+                        .toString()+ " Size: " + messageFifo.size()); 
 
              */
             toProcess = message.split("@");
@@ -178,7 +317,7 @@ public class Node {
                 break;
             }
 
-            for (Integer N1 : N) {
+            for (Integer N1 : nList) {
                 // Se for meu vizinho e for para mim ou broadcast
                 if (N1 == messageId && (toMe == 0 || toMe == this.id)) {
                     System.out.println("Returning" + message);
@@ -238,9 +377,9 @@ public class Node {
                                     parent = Integer.parseInt(receivedMessage[0]);
 
                                     //Remove parent from Si
-                                    for (Integer S1 : S) {
+                                    for (Integer S1 : sList) {
                                         if (S1 == Integer.parseInt(receivedMessage[0])) {
-                                            S.remove(S1);
+                                            sList.remove(S1);
                                             break;
                                         }
                                     }
@@ -249,11 +388,14 @@ public class Node {
                                     System.err.println("[STATE -" + state + "] Received Unexpected Message in state 0");
                                 }
                             }
+                            sendPing();
                             break;
                         case 2:
                             if (DEBUG) {
                                 System.err.println("[BEGIN STATE -" + state + "]");
                             }
+                            //Start probe
+
                             delta = true;
                             //for(Integer S1: S){
                             client.sendMessage(id, election, 0, 0);
@@ -296,20 +438,26 @@ public class Node {
                             }
 
                             ackValues.add(auxReceivedMostValued);
-                            S.remove(auxReceivedId);
 
-                            if (S.isEmpty()) //Nao e empty
-                            {
-                                state = 6;
-                            } else {
-                                for (int i = 0; i < S.size(); i++) {
+                            synchronized (sList) {
+
+                                sList.remove(auxReceivedId);
+
+                                if (sList.isEmpty()) //Nao e empty
+                                {
+                                    state = 6;
+                                } else {
                                     if (DEBUG) {
-                                        System.err.println(S.get(i) + " ");
-                                    }
-                                }
-                                state = 3;
+                                        for (int i = 0; i < sList.size(); i++) {
 
+                                            System.err.println(sList.get(i) + " ");
+                                        }
+                                    }
+                                    state = 3;
+
+                                }
                             }
+
                             break;
                         case 6:
                             if (DEBUG) {
@@ -380,6 +528,7 @@ public class Node {
 
                             client.sendMessage(id, lead, 0, lid);
                             System.out.println("[Node " + id + "] ACABOU LIDER É :" + lid);
+
                             try {
                                 Files.write(Paths.get("/usr/users2/mieec2012/ee12061/NetBeansProjects/sdis/dist/myfile.txt"), (Integer.toString(nMessage) + '\n').getBytes(), StandardOpenOption.APPEND);
                             } catch (IOException e) {
@@ -414,12 +563,14 @@ public class Node {
                                 System.err.println("[BEGIN STATE -" + state + "]");
                             }
                             ackValues.add(auxReceivedMostValued);
-                            S.remove(auxReceivedId);
+                            synchronized (sList) {
+                                sList.remove(auxReceivedId);
 
-                            if (S.isEmpty()) {
-                                state = 11;
-                            } else {
-                                state = 9;
+                                if (sList.isEmpty()) {
+                                    state = 11;
+                                } else {
+                                    state = 9;
+                                }
                             }
                             break;
                         case 11:
@@ -450,11 +601,11 @@ public class Node {
                             long estimatedTime = System.nanoTime() - startTime;
                             float time = estimatedTime;
                             try {
-                                Files.write(Paths.get("/usr/users2/mieec2012/ee12061/NetBeansProjects/sdis/dist/myfile.txt"), (Integer.toString(nMessage) + ' ' + time/1000000 + '\n').getBytes(), StandardOpenOption.APPEND);
+                                Files.write(Paths.get("/usr/users2/mieec2012/ee12061/NetBeansProjects/sdis/dist/myfile.txt"), (Integer.toString(nMessage) + ' ' + time / 1000000 + '\n').getBytes(), StandardOpenOption.APPEND);
                             } catch (IOException e) {
                                 System.out.println("Nao ha ficheiro");
                             }
-                            
+
                             System.out.println("[Node " + id + "] ACABOU LIDER É :" + lid + "\n Elapsed Time: " + time / 1000000);
                             return;
 

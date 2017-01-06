@@ -6,13 +6,11 @@
 package leaderelection;
 
 import java.io.IOException;
-import static java.lang.Math.log;
 import java.net.DatagramPacket;
 import java.net.InetAddress;
 import java.net.MulticastSocket;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import leaderelection.Node;
 
 /**
  *

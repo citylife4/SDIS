@@ -7,55 +7,40 @@ package leaderelection;
 
 /**
  *
- * @author alunos
+ * @author Afonso Moreira
+ * @author José Valverde
+ * @author Miguel Carvalho
  */
-
-
-
 public class LeaderElection {
 
     public static void main(String[] args) throws Exception {
-    
-        //start connection
-        // - new UDPclient
-        
-        //init nodes values for leader election
-        
-        // new node
-        
-        //start leader election...
-        
-        // new statemachine (or node method, just do node.state_machine();)
-        boolean initiate;
-        
-        if((args.length < 4))
-        {
-            System.out.println("Arg value invalid");
-            return;
-        }
-        
-        if((args[2]).equals("1"))
-            initiate = true; 
-        else
-            initiate = false;
-        
-        
-        
-        
-        Node n = new Node(Integer.parseInt(args[0]),Integer.parseInt(args[1]),initiate);
-        
-        for(int i=3; i<args.length; i++){
-            int toAdd = Integer.parseInt(args[i]);
-            //System.out.println("[Main] Adding from " + i + "with " + toAdd);
-            n.addNeighbor(Integer.parseInt(args[i]));
-            }
-        
-        System.out.println("Starting State Machine");
-        
-        n.init();
-        
-    }
 
         
-    
+        boolean initiate;
+
+        //Check arg values
+        if ((args.length < 4)) {
+            System.out.println("Arg value invalid");
+            System.exit(1);
+        }
+
+        //check if initiator
+        initiate = (args[2]).equals("1");
+        
+
+        //Create node object
+        Node n = new Node(Integer.parseInt(args[0]), Integer.parseInt(args[1]), initiate);
+
+        //Add neighbor
+        for (int i = 3; i < args.length; i++)
+            n.addNeighbor(Integer.parseInt(args[i]));
+        
+
+        System.out.println("[ID: " + Integer.parseInt(args[0]) + "] Starting");
+
+        //Initiate State Machine
+        n.init();
+
+    }
+
 }
