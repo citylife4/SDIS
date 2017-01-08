@@ -14,6 +14,7 @@ import java.util.Arrays;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.Queue;
+import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -36,9 +37,9 @@ public class Node {
     private UDPclient client;
     private final int port = 12345;
     private final String IP = "225.1.2.3";
-    private static Queue messageFifo = new LinkedList();
-    private static Queue replyFifo = new LinkedList();
-    private static Queue probeFifo = new LinkedList();
+    private static ConcurrentLinkedQueue messageFifo = new ConcurrentLinkedQueue();
+    private static ConcurrentLinkedQueue replyFifo = new ConcurrentLinkedQueue();
+    private static ConcurrentLinkedQueue probeFifo = new ConcurrentLinkedQueue();
 
     public int nMessage = 0;
     public int toSendDestination = 0;
