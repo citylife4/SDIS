@@ -58,6 +58,7 @@ public class Node {
     //
     public static boolean add = false;
     long startTime;
+    private String[] expectedAck = null;
 
     ArrayList<Integer> nList;
     final ArrayList<Integer> sList;
@@ -222,25 +223,30 @@ public class Node {
                                 try {
                                     for (Iterator it = replyFifo.iterator(); it.hasNext();) {
                                         Object messages = it.next();
-                                        int id = Integer.parseInt(String.valueOf(messages).split("\\@")[0]);
-                                        toCheck.add(id);
+                                        int toAdd = Integer.parseInt(String.valueOf(messages).split("\\@")[0]);
+                                        int receivedId = Integer.parseInt(String.valueOf(messages).split("\\@")[2]);
+                                        if (id == receivedId) {
+                                            toCheck.add(toAdd);
+                                        }
                                     }
                                 } finally {
                                     replyFifoLock.unlock();
                                 }
 
+                                System.out.println("Slist after: ");
+                                sList.stream().forEach(System.out::println);
+
+                                System.out.println("Tocheck: ");
+                                toCheck.stream().forEach(System.out::println);
                                 synchronized (sList) {
                                     //S.removeAll(toCheck);
-                                    sList.forEach(idtmp -> {
-                                        if (!toCheck.contains(idtmp)) {
-                                            sList.remove(idtmp);
-                                        }
-                                    });
-
+                                    sList.retainAll(toCheck);
+                                    System.out.println("Slist before: ");
                                     sList.forEach(idtmp -> {
                                         System.out.println(idtmp);
                                     });
                                 }
+                                System.out.println("asd: ");
 
                                 break;
 
@@ -288,6 +294,10 @@ public class Node {
                     //break;
                 }
 
+                if (sList.isEmpty() && ( state == 3 || state == 10)) {
+                    return null;
+                }
+
             }
 
             /*
@@ -321,7 +331,7 @@ public class Node {
             for (Integer N1 : nList) {
                 // Se for meu vizinho e for para mim ou broadcast
                 if (N1 == messageId && (toMe == 0 || toMe == this.id)) {
-                    System.out.println("Returning" + message);
+                    System.out.println("[PARSE] Misc:" + message);
                     add = false;
                     nMessage++;
                     return toProcess;
@@ -409,6 +419,12 @@ public class Node {
                             }
                             String[] receivedMessage = processFIFO();
 
+                            if (receivedMessage == null) {
+                                System.err.println("[STATE -" + state + "] Slist is empty: " + sList.isEmpty());
+                                state = 5;
+                                break;
+                            }
+
                             switch (receivedMessage[1]) {
                                 case election:
                                     auxReceivedId = Integer.parseInt(receivedMessage[0]);
@@ -423,7 +439,7 @@ public class Node {
                                     state = 5;
                                     break OUTER;
                                 default:
-                                    System.err.println("[STATE -" + state + "] Received Unexpected Message in state 3");
+                                    System.err.println("[STATE -" + state + "] Received Unexpected Message in state 3: " + null);
                                     break OUTER;
                             }
                         case 4:
@@ -544,10 +560,16 @@ public class Node {
                             if (DEBUG) {
                                 System.err.println("[BEGIN STATE -" + state + "]");
                             }
-                            String[] expectedAck;
+                            
 
                             while (true) {
                                 expectedAck = processFIFO();
+
+                                if (expectedAck == null) {
+                                    System.err.println("[STATE -" + state + "] Breaking because ping: ");
+                                    state = 10;
+                                    break;
+                                }
                                 if ((expectedAck[1]).equals(ack)) {
                                     if (DEBUG) {
                                         System.out.println("expectedACK: " + expectedAck[0] + " " + expectedAck[1] + " " + expectedAck[2] + " " + expectedAck[3] + " ");
@@ -557,23 +579,31 @@ public class Node {
                                     state = 10;
                                     break;
                                 }
+
                             }
                             break;
                         case 10:
                             if (DEBUG) {
                                 System.err.println("[BEGIN STATE -" + state + "]");
                             }
-                            ackValues.add(auxReceivedMostValued);
-                            synchronized (sList) {
-                                sList.remove(auxReceivedId);
+                            if (expectedAck != null) {
+                                ackValues.add(auxReceivedMostValued);
+                                synchronized (sList) {
+                                    sList.remove(auxReceivedId);
 
-                                if (sList.isEmpty()) {
-                                    state = 11;
-                                } else {
-                                    state = 9;
+                                    if (sList.isEmpty()) {
+                                        state = 11;
+                                    } else {
+                                        state = 9;
+                                    }
+                                    break;
                                 }
                             }
-                            break;
+                            else if(expectedAck == null && sList.isEmpty())
+                                state = 11;
+                            else
+                                System.err.println("Problems in state "+ state);
+                            
                         case 11:
                             if (DEBUG) {
                                 System.err.println("[BEGIN STATE -" + state + "]");
