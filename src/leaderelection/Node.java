@@ -37,9 +37,9 @@ public class Node {
     private UDPclient client;
     private final int port = 12345;
     private final String IP = "225.1.2.3";
-    private static ConcurrentLinkedQueue messageFifo = new ConcurrentLinkedQueue();
-    private static ConcurrentLinkedQueue replyFifo = new ConcurrentLinkedQueue();
-    private static ConcurrentLinkedQueue probeFifo = new ConcurrentLinkedQueue();
+    private static final ConcurrentLinkedQueue messageFifo = new ConcurrentLinkedQueue();
+    private static final ConcurrentLinkedQueue replyFifo = new ConcurrentLinkedQueue();
+    private static final ConcurrentLinkedQueue probeFifo = new ConcurrentLinkedQueue();
 
     public int nMessage = 0;
     public int toSendDestination = 0;
@@ -246,6 +246,7 @@ public class Node {
                                         System.out.println(idtmp);
                                     });
                                 }
+                                toCheck.removeAll(toCheck);
                                 System.out.println("asd: ");
 
                                 break;
@@ -269,6 +270,8 @@ public class Node {
         int messageId;
         int toMe;
         String message;
+
+        System.out.println("[Process] Starting");
 
         while (true) {
 
@@ -294,7 +297,7 @@ public class Node {
                     //break;
                 }
 
-                if (sList.isEmpty() && ( state == 3 || state == 10)) {
+                if (sList.isEmpty() && (state == 3 || state == 10)) {
                     return null;
                 }
 
@@ -323,20 +326,19 @@ public class Node {
             toProcess = message.split("@");
             messageId = Integer.parseInt(toProcess[0]);
             toMe = Integer.parseInt(toProcess[2]);
-
+            System.out.println("[PARSE all] Misc:" + message);
             if (toProcess == null) {
                 break;
             }
 
             for (Integer N1 : nList) {
                 // Se for meu vizinho e for para mim ou broadcast
-                if (N1 == messageId && (toMe == 0 || toMe == this.id)) {
+                if (N1 == messageId && (toMe == 0 || toMe == Node.id)) {
                     System.out.println("[PARSE] Misc:" + message);
                     add = false;
                     nMessage++;
                     return toProcess;
                 } else {
-                    continue;
                 }
             }
 
@@ -371,14 +373,28 @@ public class Node {
                     switch (state) {
                         case 1: //espera por input ou election
                             if (DEBUG) {
-                                System.out.println("[STATE -" + state + "] initator? = " + initiator);
+                                System.out.println("[STATE -" + state + "]");
                             }
 
                             if (initiator == true) {
+                                if (DEBUG) {
+                                    System.out.println("[STATE -" + state + "] I'm the Initiator");
+                                }
+
                                 client.sendMessage(id, election, 0, 0);
                                 state = 9;
 
                             } else {
+                                sList.stream().forEach(System.out::print);
+
+                                if (DEBUG) {
+                                    System.out.println("[STATE -" + state + "] I'm not the Initiator");
+                                }
+                                if (sList.isEmpty()) {
+                                    nList.stream().forEach(System.out::print);
+                                    sList.addAll(nList);
+                                    sList.stream().forEach(System.out::print);
+                                }
 
                                 String[] receivedMessage = processFIFO();
                                 if (DEBUG) {
@@ -395,6 +411,11 @@ public class Node {
                                         }
                                     }
                                     state = 2;
+                                }
+                                if (receivedMessage[1].equals(lead)) {
+                                    if (Integer.parseInt(receivedMessage[3]) != lid) {
+                                        client.sendMessage(id, lead, 0, lid);
+                                    }
                                 } else {
                                     System.err.println("[STATE -" + state + "] Received Unexpected Message in state 0");
                                 }
@@ -524,14 +545,14 @@ public class Node {
 
                             break;
 
-                        case 71:
+                        /*case 71:
                             if (DEBUG) {
                                 System.err.println("[BEGIN STATE -" + state + "]");
                             }
                             client.sendMessage(id, ack, toSendDestination, mostValuedAck);
                             state = 7;
                             break;
-
+*/
                         case 8:
                             if (DEBUG) {
                                 System.err.println("[BEGIN STATE -" + state + "]");
@@ -552,7 +573,11 @@ public class Node {
                                 System.out.println("nao ha ficheiro");
                                 //exception handling left as an exercise for the reader
                             }
-                            return;
+
+                            initiator = false;
+                            state = 1;
+                            //return;
+                            break;
                         case 9:
 
                             startTime = System.nanoTime();
@@ -560,7 +585,6 @@ public class Node {
                             if (DEBUG) {
                                 System.err.println("[BEGIN STATE -" + state + "]");
                             }
-                            
 
                             while (true) {
                                 expectedAck = processFIFO();
@@ -598,12 +622,12 @@ public class Node {
                                     }
                                     break;
                                 }
-                            }
-                            else if(expectedAck == null && sList.isEmpty())
+                            } else if (expectedAck == null && sList.isEmpty()) {
                                 state = 11;
-                            else
-                                System.err.println("Problems in state "+ state);
-                            
+                            } else {
+                                System.err.println("Problems in state " + state);
+                            }
+
                         case 11:
                             if (DEBUG) {
                                 System.err.println("[BEGIN STATE -" + state + "]");
@@ -638,7 +662,10 @@ public class Node {
                             }
 
                             System.out.println("[Node " + id + "] ACABOU LIDER É :" + lid + "\n Elapsed Time: " + time / 1000000);
-                            return;
+
+                            initiator = false;
+                            state = 1;
+                        //return;
 
                     }
 
